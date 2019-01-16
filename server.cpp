@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         });
         ::close(listening_socket);
       },
-      [](auto err) { std::cout << "Error connecting: " << err << std::endl; },
+      [](auto err) { std::cout << "Error binding: " << err << std::endl; },
       "localhost", (args.size() > 1) ? args[1] : "9921", 2);
   return 0;
 }
