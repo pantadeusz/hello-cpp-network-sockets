@@ -47,17 +47,18 @@ public:
 std::vector<net_addr> find_addresses(const char *addr_txt, const char *port_txt,
                                      int ai_family = AF_UNSPEC) {
 
-  struct addrinfo hints{};
-  //std::fill((char *)&hints, (char *)&hints + sizeof(struct addrinfo), 0);
+  struct addrinfo hints {};
+  // std::fill((char *)&hints, (char *)&hints + sizeof(struct addrinfo), 0);
   hints.ai_family = ai_family;    ///< IPv4 or IPv6
   hints.ai_socktype = SOCK_DGRAM; ///< datagram socket
 
-  struct addrinfo *addr_p,*rp;
+  struct addrinfo *addr_p, *rp;
   if (int err = getaddrinfo(addr_txt, port_txt, &hints, &addr_p); err) {
-      throw std::system_error(errno, std::generic_category());
+    throw std::system_error(errno, std::generic_category());
   }
   std::vector<net_addr> ret;
-  for (rp = addr_p; rp != NULL; rp = rp->ai_next) ret.push_back({rp->ai_addr, rp->ai_addrlen});  
+  for (rp = addr_p; rp != NULL; rp = rp->ai_next)
+    ret.push_back({rp->ai_addr, rp->ai_addrlen});
   freeaddrinfo(addr_p);
   return ret;
 }
@@ -97,7 +98,7 @@ int bind_socket(std::function<void(int)> success, unsigned int port_nr = 9922) {
 
 int main(int argc, char **argv) {
   auto on_bind = [&](int s) {
-    auto addrs = find_addresses("localhost", "9921");
+    auto addrs = find_addresses((argc > 1) ? argv[1] : "localhost", "9921");
 
     std::string msg = "Hi! How are you?";
     std::vector<char> msg_to_send(msg.begin(), msg.end());

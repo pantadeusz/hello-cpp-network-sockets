@@ -111,19 +111,25 @@ int do_accept(int listening_socket,
 int main(int argc, char **argv) {
   std::vector<char *> args(argv, argv + argc);
 
-  listen_server(
-      [](int listening_socket) {
-        std::cout << "Waiting for connection..." << std::endl;
-        do_accept(listening_socket, [&](int s, auto h, auto p) {
-          char msg[100];
-          ::read(s, msg, 100);
-          std::cout << "received \"" << msg << "\" from " << h
-                    << " connected on " << p << std::endl;
-          ::close(s);
-        });
-        ::close(listening_socket);
-      },
-      [](auto err) { std::cout << "Error binding: " << err << std::endl; },
-      "localhost", (args.size() > 1) ? args[1] : "9921", 2);
+  auto connection_accepted = [&](int s, auto h, auto p) {
+    char msg[100];
+    ::read(s, msg, 100);
+    std::cout << "received \"" << msg << "\" from " << h << " connected on "
+              << p << std::endl;
+    ::close(s);
+  };
+
+  auto listening_socket_ready = [&connection_accepted](int listening_socket) {
+    std::cout << "Waiting for connection..." << std::endl;
+    do_accept(listening_socket, connection_accepted);
+    ::close(listening_socket);
+  };
+
+  auto listening_socket_error = [](auto err) {
+    std::cout << "Error binding: " << err << std::endl;
+  };
+
+  listen_server(listening_socket_ready, listening_socket_error, "*",
+                (args.size() > 1) ? args[1] : "9921", 2);
   return 0;
 }

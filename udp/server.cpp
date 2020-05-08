@@ -48,34 +48,33 @@ int bind_socket(std::function<void(int)> success, unsigned int port_nr = 9922) {
 }
 
 int main(int argc, char **argv) {
-  bind_socket(
-      [&](int udp_socket) {
-        std::cout << "(server) Waiting for connection..." << std::endl;
-        char buffer[128];
-        struct sockaddr_storage peer_addr;
-        socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
-        while (1) {
-          ssize_t rsize =
-              recvfrom(udp_socket, buffer, 128, MSG_DONTWAIT,
-                       (struct sockaddr *)&peer_addr, &peer_addr_len);
-          if (rsize > 0) {
-            std::cout << "(server) Got: " << buffer << std::endl;
-            if (rsize > 0) {
-              char host[NI_MAXHOST], service[NI_MAXSERV];
-              getnameinfo((struct sockaddr *)&peer_addr, peer_addr_len, host,
-                          NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV);
-              std::cout << "(server)    from: " << host << " : " << service
-                        << std::endl;
-              sendto(udp_socket, buffer, 128, 0, (struct sockaddr *)&peer_addr,
-                     peer_addr_len);
-            }
-            break;
-          }
-          std::cout << "waiting..." << std::endl;
-          sleep(1);
+  auto socket_ready = [&](int udp_socket) {
+    std::cout << "(server) Waiting for connection..." << std::endl;
+    char buffer[128];
+    struct sockaddr_storage peer_addr;
+    socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
+    while (1) {
+      ssize_t rsize = recvfrom(udp_socket, buffer, 128, MSG_DONTWAIT,
+                               (struct sockaddr *)&peer_addr, &peer_addr_len);
+      if (rsize > 0) {
+        std::cout << "(server) Got: " << buffer << std::endl;
+        if (rsize > 0) {
+          char host[NI_MAXHOST], service[NI_MAXSERV];
+          getnameinfo((struct sockaddr *)&peer_addr, peer_addr_len, host,
+                      NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV);
+          std::cout << "(server)    from: " << host << " : " << service
+                    << std::endl;
+          sendto(udp_socket, buffer, 128, 0, (struct sockaddr *)&peer_addr,
+                 peer_addr_len);
         }
-        ::close(udp_socket);
-      },
-      9921);
+        break;
+      }
+      std::cout << "waiting..." << std::endl;
+      sleep(1);
+    }
+    ::close(udp_socket);
+  };
+
+  bind_socket(socket_ready, 9921);
   return 0;
 }
