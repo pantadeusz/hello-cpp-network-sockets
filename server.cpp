@@ -112,8 +112,8 @@ int main(int argc, char** argv)
     std::cout << "Waiting for connection..." << std::endl;
     auto accept_fut = do_accept(listening_socket);
     while (accept_fut.wait_for(std::chrono::seconds(1)) != std::future_status::ready) {
-      std::cout << ".";
-      std::flush(std::cout);
+        std::cout << ".";
+        std::flush(std::cout);
     };
     auto [s, h, p] = accept_fut.get();
     char msg[100];
