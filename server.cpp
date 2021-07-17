@@ -82,7 +82,7 @@ std::future<int> listen_server(
 std::future<std::tuple<int, std::string, std::string>> do_accept(
     int listening_socket)
 {
-    return std::async(std::launch::async, [=]() -> int {
+    return std::async(std::launch::async, [=]() -> std::tuple<int, std::string, std::string> {
         struct sockaddr_storage peer_addr;
         socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
         int connected_socket;
