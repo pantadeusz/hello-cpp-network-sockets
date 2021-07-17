@@ -79,23 +79,25 @@ std::future<int> listen_server(
  * @param listening_socket the correct listening socket
  * @return {connected or failed socket descriptor, hostname, socket}
  */
-std::tuple<int, std::string, std::string> do_accept(
+std::future<std::tuple<int, std::string, std::string>> do_accept(
     int listening_socket)
 {
-    struct sockaddr_storage peer_addr;
-    socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
-    int connected_socket;
+    return std::async(std::launch::async, [=]() -> int {
+        struct sockaddr_storage peer_addr;
+        socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
+        int connected_socket;
 
-    if ((connected_socket =
-                ::accept(listening_socket, (struct sockaddr*)&peer_addr,
-                    &peer_addr_len)) == -1) {
-        throw std::invalid_argument("could not accept connection!");
-    } else {
-        char host[NI_MAXHOST], service[NI_MAXSERV];
-        getnameinfo((struct sockaddr*)&peer_addr, peer_addr_len, host, NI_MAXHOST,
-            service, NI_MAXSERV, NI_NUMERICSERV);
-        return {connected_socket, host, service};
-    }
+        if ((connected_socket =
+                    ::accept(listening_socket, (struct sockaddr*)&peer_addr,
+                        &peer_addr_len)) == -1) {
+            throw std::invalid_argument("could not accept connection!");
+        } else {
+            char host[NI_MAXHOST], service[NI_MAXSERV];
+            getnameinfo((struct sockaddr*)&peer_addr, peer_addr_len, host, NI_MAXHOST,
+                service, NI_MAXSERV, NI_NUMERICSERV);
+            return {connected_socket, host, service};
+        }
+    });
 }
 
 int main(int argc, char** argv)
@@ -108,7 +110,7 @@ int main(int argc, char** argv)
 
     int listening_socket = listening_socket_fut.get();
     std::cout << "Waiting for connection..." << std::endl;
-    auto [s, h, p] = do_accept(listening_socket);
+    auto [s, h, p] = do_accept(listening_socket).get();
     char msg[100];
     ::read(s, msg, 100);
     std::cout << "received \"" << msg << "\" from " << h << " connected on "
