@@ -33,12 +33,9 @@
 std::future<int> connect_to(const char* addr_txt, const char* port_txt)
 {
     return std::async(std::launch::async, [=]() -> int {
-        struct addrinfo hints;
-        std::fill((char*)&hints, (char*)&hints + sizeof(struct addrinfo), 0);
+        struct addrinfo hints = {};
         hints.ai_family = AF_UNSPEC;     ///< IPv4 or IPv6
         hints.ai_socktype = SOCK_STREAM; ///< stream socket
-        hints.ai_flags = 0;              ///< no additional flags
-        hints.ai_protocol = 0;           ///< any protocol
 
         struct addrinfo* addr_p;
         if (int err = getaddrinfo(addr_txt, port_txt, &hints, &addr_p); err) {
